@@ -619,6 +619,8 @@ public class PairProgramming {
 	 */
 	public static void main(String[] args) {
 		system.out.println("I love SE so much!");
+		system.out.println("So much!");
+		system.out.println("Much!");
 		readText("C://Users/gzhang/Desktop/Lab1", true);
 		generateGraph();
 		graph.printGraph();
