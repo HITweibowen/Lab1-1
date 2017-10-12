@@ -1,2 +1,2 @@
 This is the first change.double
-This is the first change.
+delete a line
