@@ -1,0 +1,438 @@
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>文本有向图</title>
+    <script src="/static/js/d3.min.js"></script>
+    <script src="/static/js/saveSvgAsPng.js"></script>
+    <script src="/static/js/jquery.min.js"></script>
+    <style>
+        #nav {
+            background-color:#eeeeee;
+            height:1100px;
+            width:180px;
+            float:left;
+            margin-right:10px;
+        }
+
+        #text {
+            padding-left: 5px;
+            padding-top: 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <div id = "nav">
+        <div id="graph" style="padding-top: 10px">
+            <button type="button" onclick="eraseAll()" style="margin-left: 30px;">重置页面</button><br/><br/>
+            <button type="button" onclick="savaGraph()" style="margin-left: 30px;">保存图片</button><br/><br/>
+            <button type="button" onclick="increaseCharge()" style="margin-left: 30px;">分散结点</button><br/><br/>
+            <button type="button" onclick="decreaseCharge()" style="margin-left: 30px;">收缩结点</button><br/><br/>
+            <button type="button" onclick="showWeight()" style="margin-left: 13px;">隐藏/显示权值</button>
+        </div>
+
+        <div id="query_word">
+            <p id = "text" style="font-size: 25px; font-family: serif; " align="left">1.查询桥接词</p>
+            <label for="word1" style="font-size: 15px;">起点: </label>
+            <input id="word1" type="text" name="word1" style="width:80px"><br/>
+            <label for="word2" style="font-size: 15px;">终点: </label>
+            <input id="word2" type="text" name="word2" style="width:80px"><br/>
+            <button type="button" onclick="queryBridgeWords()" style="margin-left:30px; margin-top:5px; width:50px">确认</button>
+            <p id="bridge_words"></p>
+        </div>
+
+        <div id="generate_txt">
+            <p id="text" style="font-size: 25px; font-family: serif;" align="left">2.生成文本</p>
+            <label for="input_text" style="font-size: 15px;">请输入文本:</label>
+            <button type="button" onclick="generateTxt1()" style="margin-left: 10px">选择文件</button>
+            <textarea id="input_text" style="height: 60px; width: 180px"></textarea>
+            <button type="button" onclick="generateTxt2()" style="margin-left: 40px; margin-top: 5px">提交</button><br/><br/>
+            <textarea id="new_text" style="height: 60px; width: 180px"></textarea>
+        </div>
+
+        <div id="random_walk">
+            <p id = "text" style="font-size: 25px; font-family: serif; " align="left">3.随机游走</p>
+            <p style="font-size: 15px;">双击单词随机选择起点</p>
+            <button id="next" onclick="nextWord()">Next</button>
+            <button id="stop" onclick="stopWalk()">Stop</button>
+        </div>
+
+        <div id="min_path">
+            <p id = "text" style="font-size: 25px; font-family: serif;" align="left">4.最短路径</p>
+            <p style="font-size: 15px;">1.两点最短路径</p>
+            <label for="start" style="font-size: 15px;">起点: </label>
+            <input id="start" type="text" style="width:80px"><br/>
+            <label for="end" style="font-size: 15px;">终点: </label>
+            <input id="end" type="text" style="width:80px"><br/>
+            <button type="button" onclick="minPath()" style="margin-left:30px; margin-top:5px; width:50px">确认</button>
+            <p id="path_length1"></p>
+
+            <p style="font-size: 15px; ">2.单源最短路径</p>
+            <label for="source" style="font-size: 15px;">起点: </label>
+            <input id="source" type="text" style="width:80px">
+            <button type="button" onclick="calcAllMinPath()">确认</button><br/>
+            <label for="any_end" style="font-size: 15px;">终点: </label>
+            <input id="any_end" type="text" style="width:80px">
+            <button type="button" onclick="showOneMinPath()">确认</button>
+            <p id="path_length2"></p>
+        </div>
+    </div>
+
+    <script>
+        //接收后端数据
+        let gVertices = {{ vertices|safe }};
+        let gEdges = {{ edges|safe }};
+
+        //获取D3顶点和边的格式化数据
+        let nodes = [];
+        let edges = [];
+        for(let i=0; i < gVertices.length; ++i)
+            nodes.push({name : gVertices[i]});
+        for(let i=0; i< gEdges.length; ++i)
+            edges.push({source : gEdges[i][0], target: gEdges[i][1], relation: gEdges[i][2], edgeColor: gEdges[i][3]})
+
+        alert("结点个数:" + String(gVertices.length));
+
+        let width = 1200;  //图片宽度
+        let height = 800;  //图片高度
+        let node_w = 100;  //点限制宽度
+        let node_h = 80;   //点限制高度
+        let color = d3.scale.category20();  //颜色集
+
+        //创建SVG
+        let svg = d3.select("body")
+                    .append("svg")
+                    .style('position', 'fixed')                     //固定画布
+                    .attr("id", "lab")                              //id编号
+                    .attr("width", width)                           //宽度
+                    .attr("height", height);                        //长度
+
+        //创建布局
+        let force = d3.layout.force()
+                    .nodes(nodes)                                   //结点
+                    .links(edges)                                   //边
+                    .size([width, height])                          //大小
+                    .linkDistance(150)                              //边的长度
+                    .charge(nodes.length * 20 - 1500)               //点之间的作用力, 负斥正吸
+                    .on("tick", tick)                               //每个时间间隔的操作
+                    .start();                                       //开始作用
+
+        //设置箭头
+        let marker=  svg.append("g")
+                    .append("marker")
+                    .attr("id", "arrow")                            //箭头id
+                    .attr("markerUnits","userSpaceOnUse")
+                    .attr("viewBox", "0 -5 10 10")					//坐标系的区域
+                    .attr({"refX":32, "refY": -1})					//箭头坐标
+                    .attr({"markerWidth": 12, "markerHeight": 12})	//标识的大小
+                    .attr("orient", "auto")							//绘制方向
+                    .attr("stroke-width",2)							//箭头宽度
+                    .append("path")
+                    .attr("d", "M0,-5L10,0L0,5")					//箭头路径
+                    .attr('fill',"black");						    //箭头颜色
+
+        //设置边
+        let all_edges = svg.append("g")
+                    .selectAll(".edgepath")
+                    .data(edges)
+                    .enter()
+                    .append("path")
+                    .attr({'class': 'edgepath', 'id': function(d,i){return 'edgepath'+i;}})
+                    .attr('d', function(d){return 'M ' + d.source.x + ' ' + d.source.y + ' L '+ d.target.x + ' ' + d.target.y;})
+                    .style("stroke", function(d){
+                        if(d.edgeColor === 1) return "black";
+                        return color(d.edgeColor);
+                    })              //线条颜色
+                    .style("stroke-width", 2)                       //线条粗细
+                    .attr("marker-end", "url(#arrow)" );            //根据箭头标记的id号标记箭头
+
+        //设置边上的文字
+        let edges_text = svg.append("g")
+                    .selectAll(".edgelabel")
+                    .data(edges)
+                    .enter()
+                    .append("text")
+                    .attr({'font-size':"20px", 'class':'edgelabel', 'fill': color(8)})
+                    .attr({'id': function(d,i){return 'edgepath'+i;}, 'dx':80, 'dy':20})
+                    .append('textPath')
+                    .attr('xlink:href', function(d,i) {return '#edgepath'+i;})
+                    .text(function(d){return d.relation;});        //显示文字
+        edges_text.attr('opacity', 1);
+
+        //设置顶点
+        let all_vertices = svg.append("g")
+                    .selectAll("circle")
+                    .data(nodes)
+                    .enter()
+                    .append("circle")
+                    .attr("r", 25)                                  //圆圈半径
+                    .style("fill", function(d,i){return color(i);}) //填充颜色
+                    .style('stroke', "black")                       //边框颜色
+                    .on("dblclick", chooseWord)
+                    //.on('mouseover', function (d) {edges_text.attr('opacity', 1);})
+                    //.on('mouseout', function (d) {edges_text.attr('opacity', 0);})
+                    .call(force.drag);
+
+        //设置顶点上的文字
+        let vertices_text = svg.append("g")
+                    .selectAll("text")
+                    .data(force.nodes())
+                    .enter()
+                    .append("text")
+                    .attr("text-anchor", "middle")                  //文字置中
+                    .attr('font-size', "18px")                      //文字大小
+                    .style('fill',"black")                          //文字颜色
+                    .text(function(d){return d.name;});             //显示文字
+
+        let randomPath;             //随机游走路径
+        let randomStatus;           //随机游走结束状态
+        let currentPos;             //随机游走步数
+        let minimalPath;            //最短路径
+        let bridgeWords;            //桥接词
+        let chargeMultiple = 0;     //缩放基底
+        let flag = true;            //边上文字的隐藏状态, 默认显示
+
+        //更新点、线和文字的坐标
+        function tick() {
+            //顶点坐标
+            all_vertices.attr("transform", function(d){
+                return "translate(" + d.x + "," + d.y + ")";
+            });
+
+            //限制小球活动范围
+            nodes.forEach(function(d, i){
+                    d.x = d.x - node_w/2 < 0 ? node_w/2 : d.x ;
+                    d.x = d.x + node_w/2 > width ? width - node_w/2 : d.x ;
+                    d.y = d.y - node_h/2 < 0 ? node_h/2 : d.y ;
+                    d.y = d.y + node_h/2> height ? height - node_h/2: d.y ;
+            });
+
+            //顶点文字坐标
+            vertices_text.attr("transform", function(d){
+                return "translate(" + d.x + "," + d.y + ")";
+            });
+
+            //边坐标
+            all_edges.attr('d', function(d){
+                return 'M '+ d.source.x + ' ' + d.source.y + 'L' + d.target.x + ' ' + d.target.y;
+            });
+
+            //边文字坐标
+            edges_text.attr("transform",function(d){
+                if (d.target.x < d.source.x)
+                {
+                    let bbox = this.getBBox();
+                    let rx = bbox.x + bbox.width/2;
+                    let ry = bbox.y + bbox.height/2;
+                    return 'rotate(180 '+rx+' '+ry+')';
+                }
+                else
+                    return 'rotate(0)';
+            });
+        }
+
+        //查询桥接词
+        function queryBridgeWords(){
+            let startWord = document.getElementById('word1').value;
+            let endWord = document.getElementById('word2').value;
+            $.post("/lab/query_word", {"word1":startWord, "word2": endWord}, function(ret){
+                if(ret.status === 1)            //查询成功
+                {
+                    bridgeWords = ret.words;
+                    all_vertices.attr('r', function(d){
+                        for(let i=0; i < bridgeWords.length; ++i)
+                            if (d.name === bridgeWords[i])
+                                return 35;
+                        return 25
+                    });
+                    vertices_text.style('fill', function(d, i){
+                        for(let i=0; i < bridgeWords.length; ++i)
+                            if (d.name === bridgeWords[i])
+                                return "red";
+                        return "black";
+                    });
+                    vertices_text.style('font-size', function(d, i){
+                        for(let i=0; i < bridgeWords.length; ++i)
+                            if (d.name === bridgeWords[i])
+                                return "25px";
+                        return "18px";
+                    });
+                }
+                else if(ret.status === 2)       //不存在桥接词
+                    alert("No bridge words from \"" + startWord + "\" to \"" + endWord +"\"!");
+                else                            //单词不存在
+                    alert("No \"" + startWord + "\" or \"" + endWord + "\" in the graph!");
+            });
+        }
+
+        //生成新文本, 选择文件
+        function generateTxt1(){
+            $.post("/lab/generate_txt", {"inputText": ""}, function(ret){
+                document.getElementById('new_text').innerText = ret.newText;
+            });
+        }
+
+        //生成新文本, 前端输入
+        function generateTxt2(){
+            let text = document.getElementById('input_text').value;
+            $.post("/lab/generate_txt", {"inputText": text}, function(ret){
+                document.getElementById('new_text').value = ret.newText;
+            });
+        }
+
+        //计算两点之间的最短路径
+        function minPath() {
+            let startWord = document.getElementById('start').value;
+            let endWord = document.getElementById('end').value;
+            $.post("/lab/show_path", {"startWord": startWord, "endWord": endWord}, function (ret) {
+                if(ret.status === 1)            //正常
+                {
+                    alert("最短路径长度:" + String(ret.dist));
+                    all_edges.style('stroke',function (d) {
+                        for(let i=0; i < ret.paths.length; ++i)
+                        {
+                            minimalPath = ret.paths[i].split(',');
+                            for (let j = 0; j < minimalPath.length - 1; ++j)
+                                if (minimalPath[j] === d.source.name && minimalPath[j + 1] === d.target.name)
+                                    return color(15 + i * 8);
+                        }
+                        return "black";
+                    });
+                }
+                else if(ret.status === 2)       //路径不存在
+                    alert("两个单词之间不存在路径!");
+                else if(ret.status === 3)       //起点单词不存在
+                    alert("起点单词不存在, 请重新输入!");
+                else                            //终点单词不存在
+                    alert("终点单词不存在, 请重新输入!");
+            });
+        }
+
+        //计算单源最短路径
+        function calcAllMinPath(){
+            let startWord = document.getElementById('source').value;
+            $.post("/lab/calc_all_path", {"startWord": startWord}, function (ret) {
+                if(ret.status === 1)            //计算成功
+                    alert("计算完毕, 可查询!");
+                else                            //单词不存在
+                    alert("起点单词不存在, 请重新输入!");
+            });
+        }
+
+        //展示指定的单源最短路径
+        function showOneMinPath() {
+            let endWord = document.getElementById('any_end').value;
+            $.post("/lab/show_one_path", {"endWord": endWord}, function (ret) {
+                if(ret.status === 1)            //查询成功
+                {
+                    alert("最短路径长度:" + String(ret.dist));
+                    minimalPath = ret.path.split(',');
+                    all_edges.style('stroke',function (d) {
+                        for(let i=0; i < minimalPath.length-1; ++i)
+                            if (minimalPath[i] === d.source.name && minimalPath[i + 1] === d.target.name)
+                                return "red";
+                        return "black";
+                    });
+                }
+                else if(ret.status === 2)       //路径不存在
+                    alert("两个单词之间不存在路径!");
+                else                            //单词不存在
+                    alert("终点单词不存在, 请重新输入!");
+            });
+        }
+
+        //选择游走起点
+        function chooseWord(d) {
+            $.post("/lab/random_walk", {"word": String(d.name)}, function (ret) {
+                if (ret.status === 1 || ret.status === 2)
+                {
+                    currentPos = 1;
+                    randomStatus = ret.status;
+                    randomPath = ret.path.split(',');
+                    if(randomPath.length > 1)
+                        all_edges.style('stroke',function (d) {
+                            if (randomPath[0] === d.source.name && randomPath[1] === d.target.name)
+                                return "red";
+                            return "balck";
+                        });
+                    else
+                        alert("您选择的顶点没有出边!");
+                }
+                else
+                    alert("您选择的单词不存在!");
+            });
+        }
+
+        //游走下一步
+        function nextWord() {
+            if(currentPos < randomPath.length - 1)
+            {
+                all_edges.style('stroke',function (d) {
+                    for(let i=0; i <= currentPos; ++i)
+                        if (randomPath[i] === d.source.name && randomPath[i + 1] === d.target.name)
+                            return "red";
+                    return "black";
+                });
+                currentPos += 1;
+            }
+            else {
+                if(randomStatus === 1)
+                    alert("没有出边, 游走结束!");
+                else
+                    alert("遇到重边:" + randomPath[currentPos-1] + "->" + randomPath[currentPos] + ", 游走结束!");
+                stopWalk();
+            }
+        }
+
+        //停止游走
+        function stopWalk(){
+            $.post("/lab/stop_walk", {'stopPos': currentPos}, function(ret){
+                if(ret.status === 1)
+                    all_edges.style("stroke", "black");
+            })
+        }
+
+        //重置网页
+        function eraseAll() {
+            all_edges.style('stroke', 'black');
+            all_vertices.attr('r', 25);
+            vertices_text.style('fill', "black");
+            vertices_text.style('font-size', "18px");
+            document.getElementById('input_text').value = "";
+            document.getElementById('new_text').innerText = "";
+            document.getElementById('word1').value = "";
+            document.getElementById('word2').value = "";
+            document.getElementById('source').value = "";
+            document.getElementById('start').value = "";
+            document.getElementById('end').value = "";
+        }
+
+        //保存文本有向图
+        function savaGraph(){
+            saveSvgAsPng(document.getElementById("lab"), "lab.png", {'backgroundColor':'white','encoderOptions': 0});
+        }
+
+        //增加顶点分散程度
+        function increaseCharge(){
+            chargeMultiple += 1;
+            force.charge(nodes.length * 20 - 1500 - 100 * chargeMultiple).start();
+        }
+
+        //减小顶点分散程度
+        function decreaseCharge() {
+            chargeMultiple -= 1;
+            force.charge(nodes.length * 20 - 1500 - 100 * chargeMultiple).start();
+        }
+
+        //显示或隐藏边的权值
+        function showWeight() {
+            if(flag === false)
+                edges_text.attr('opacity', 1);
+            else
+                edges_text.attr('opacity', 0);
+            flag = !flag;
+        }
+
+    </script>
+</body>
+</html>
