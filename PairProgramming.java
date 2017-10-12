@@ -612,41 +612,4 @@ public class PairProgramming {
 			out.println(e.getMessage());
 			return "0";
 		}
-	}
-
-	/**
-	 *功能: 测试程序, 此测试程序仅作为编程使用
-	 */
-	public static void main(String[] args) {
-		readText("C://Users/gzhang/Desktop/Lab1", true);
-		generateGraph();
-		graph.printGraph();
-
-		//生成新文本
-		out.println();
-		out.println(generateNewText(""));
-
-		//单源最短路径
-		out.println();
-		if(calcAllShortestPath("new").equals("1"))
-			for(String word: words)
-			 	out.println(showOneShortestPath(word));
-
-		//两点最短路径
-		out.println();
-		out.println(calcShortestPath("new", "and"));
-
-		//随机游走
-		out.println();
-		Scanner in = new Scanner(System.in);
-		do {
-			out.print("请输入起点单词:");
-			String word = in.nextLine();
-			if(word.equals("exit")) break;
-			out.println(randomWalk(word));
-			out.print("请输入步数:");
-			Integer num = Integer.parseInt(in.nextLine());
-			writeRandomPath(num.toString());
-		} while (true);
-	}
 }

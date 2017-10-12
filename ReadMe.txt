@@ -1,4 +1,3 @@
-
 		本实验我们采用了Eclipse和IDEA两种开发环境, 最终我们提交的是IDEA项目文件Lab1, 仅为后端算法实现.
 		本实验我们采用python框架Django进行有向图展示和用户交互界面设计, 故另加Django项目文件SoftWare_Lab1, 
 	所有后端操作均通过调用java代码生成的jar包完成.

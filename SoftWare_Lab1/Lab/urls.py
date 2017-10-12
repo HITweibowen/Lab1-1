@@ -10,4 +10,3 @@ urlpatterns = [
     url(r'^show_one_path$', views.showOneMinPath, name='show_one_min_path'),
     url(r'^random_walk$', views.randomWalk, name='random_walk'),
     url(r'^stop_walk$', views.stopWalk, name='stop_walk'),
-]
