@@ -1,4 +1,4 @@
-package liu.zhang;
+﻿package liu.zhang;
 
 import java.util.*;
 import java.io.File;
@@ -618,6 +618,7 @@ public class PairProgramming {
 	 *功能: 测试程序, 此测试程序仅作为编程使用
 	 */
 	public static void main(String[] args) {
+		system.out.println("I love SE!");
 		readText("C://Users/gzhang/Desktop/Lab1", true);
 		generateGraph();
 		graph.printGraph();
