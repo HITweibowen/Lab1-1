@@ -1,4 +1,4 @@
-package liu.zhang;
+﻿package liu.zhang;
 
 import java.util.*;
 import java.io.File;
@@ -483,7 +483,6 @@ public class PairProgramming {
 
 		//初始化
 		startSource = word1;
-		Integer size = words.size();
 		String allShortestPath = null;
 
 		//调用单源点最短路径算法, 生成新的有向图
@@ -499,7 +498,6 @@ public class PairProgramming {
 
 		//计算两点之间的所有路径, 即所有最短路径
 		ArrayList<String> visitedEdges = new ArrayList<>();
-		Integer loops = graph.getNode(word1).getAdjVertices().size();
 		ArrayList<String> path = new ArrayList<>();
 		path.add(word1);
 		while(true)
@@ -648,5 +646,6 @@ public class PairProgramming {
 			Integer num = Integer.parseInt(in.nextLine());
 			writeRandomPath(num.toString());
 		} while (true);
+		in.close();
 	}
 }
