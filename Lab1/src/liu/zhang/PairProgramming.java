@@ -15,41 +15,64 @@ class Pair<A, B>{
 	private A first;
 	private B second;
 
-	public Pair() {first=null; second=null;}
-	public Pair(A first, B second) {this.first=first; this.second=second;}
+	public Pair() {
+		first=null;
+		second=null;
+	}
+	public Pair(A first, B second) {
+		this.first=first;
+		this.second=second;
+	}
 
-	public A getFirst() {return first;}
-	public B getSecond() {return second;}
+	public A getFirst() {
+		return first;
+	}
+	public B getSecond() {
+		return second;
+	}
 
-	public void setFirst(A newValue) {first = newValue;}
-	public void setSecond(B newValue) {second =newValue;}
+	public void setFirst(A newValue) {
+		first = newValue;
+	}
+	public void setSecond(B newValue) {
+		second =newValue;
+	}
 }
 
 /**
  * 功能: 选择文件
  */
 class MyFilter extends FileFilter {
-    private String ext;  
-    
-    public MyFilter(String extString) { this.ext = extString; }
-    
-    public boolean accept(File f) {  
-        if (f.isDirectory()) return true;  
-        String extension = getExtension(f);  
-        if (extension.toLowerCase().equals(this.ext.toLowerCase()))  
-            return true;  
-        return false;  
+    private String ext;
+
+    public MyFilter(String extString) {
+    	this.ext = extString;
     }
- 
-    public String getDescription() { return this.ext.toUpperCase(); }
-  
-    private String getExtension(File f) {  
-        String name = f.getName();  
-        int index = name.lastIndexOf('.');  
-        if (index == -1)  
-            return "";  
-        else  
-        	return name.substring(index + 1).toLowerCase();  
+
+    public boolean accept(File f) {
+        if (f.isDirectory()) {
+        	return true;
+        }
+        String extension = getExtension(f);
+        if (extension.toLowerCase().equals(this.ext.toLowerCase())) {
+            return true;
+        }
+        return false;
+    }
+
+    public String getDescription() {
+    	return this.ext.toUpperCase();
+    }
+
+    private String getExtension(File f) {
+        String name = f.getName();
+        int index = name.lastIndexOf('.');
+        if (index == -1){
+            return "";
+        }
+        else {
+        	return name.substring(index + 1).toLowerCase();
+        }
     }
 }
 
@@ -60,10 +83,10 @@ class Graph{
 	/**
 	 * 功能: 图结点, 存储单个单词
 	 */
-	public static class Node{		
+	public static class Node{
 		private String word;  //结点中存储的单词
 		private HashMap<String, Pair<Node, Integer>> adjVertices; //邻接顶点及边的权值
-		
+
 		/**
 		 * 功能: 构造函数
 		 * 参数:要存储的单词, 邻接顶点及边的权值
@@ -72,28 +95,34 @@ class Graph{
 			this.word = word;
 			this.adjVertices = adjVertices == null ? new HashMap<String, Pair<Node, Integer>>() : adjVertices;
 		}
-		
+
 		/**
 		 * 功能: 添加邻接顶点
 		 * 参数: 图结点, 如果结点已经存在, 则传入已建结点, 否则新建
 		 */
 		public void addAdjVertex(Node addNode) {
 			Pair<Node, Integer> adjVertex = adjVertices.get(addNode.word);
-			if(adjVertex == null)
+			if(adjVertex == null) {
 				adjVertices.put(addNode.word, new Pair<Node, Integer>(addNode, 1));
-			else
+			}
+			else {
 				adjVertex.setSecond(adjVertex.getSecond() + 1);
+			}
 		}
-		
+
 		/**
 		 * 功能: 返回结点中存储的单词
 		 */
-		public String getWord() { return word; }
-		
+		public String getWord() {
+			return word;
+		}
+
 		/**
 		 * 功能: 返回所有邻接顶点
 		 */
-		public HashMap<String, Pair<Node, Integer>> getAdjVertices(){ return adjVertices; }
+		public HashMap<String, Pair<Node, Integer>> getAdjVertices(){
+			return adjVertices;
+		}
 	}
 
 	/**
@@ -101,7 +130,9 @@ class Graph{
 	 * 参数: 存储单词的数组, 相邻单词相邻存储
 	 */
 	public Graph(ArrayList<String> words) {
-		if(words == null || words.isEmpty()) return;
+		if(words == null || words.isEmpty()) {
+			return;
+		}
 		root = new Node(words.get(0), null);
 		allNodes.put(words.get(0), root);
 		Node preNode = root;
@@ -123,7 +154,7 @@ class Graph{
 			}
 		}
 	}
-	
+
 	/**
 	 * 功能: 命令行打印当前图结构
 	 */
@@ -132,22 +163,27 @@ class Graph{
 		{
 			out.print(key + "\t=>\t");
 			HashMap<String, Pair<Node, Integer>> adjVertices = allNodes.get(key).adjVertices;
-			for(String word: adjVertices.keySet())
+			for(String word: adjVertices.keySet()){
 				out.print(word + "\t" + adjVertices.get(word).getSecond() + "\t");
+			}
 			out.println();
 		}
 	}
-	
+
 	/**
 	 * 功能: 返回图的所有结点
 	 */
-	public HashMap<String, Node> getAllNodes() { return allNodes; }
-	
+	public HashMap<String, Node> getAllNodes() {
+		return allNodes;
+	}
+
 	/**
 	 * 功能: 返回存储指定单词的结点
 	 */
-	public Node getNode(String word) { return allNodes.get(word); }
-	
+	public Node getNode(String word) {
+		return allNodes.get(word);
+	}
+
 	private Node root = null;  //文本开始结点
 	private HashMap<String, Node> allNodes = new HashMap<>();  //所有结点
 }
@@ -169,17 +205,17 @@ public class PairProgramming {
 	 */
 	public static String[] readText(String catelogue, boolean basic){
 		JFileChooser fc = new JFileChooser(catelogue);
-		
+
 		//设置文件选择参数
-	    fc.setMultiSelectionEnabled(false); 	    
-	    fc.setFileSelectionMode(JFileChooser.FILES_ONLY);  
-	    fc.setFileHidingEnabled(true);  
-	    fc.setAcceptAllFileFilterUsed(false);  
-	    fc.setFileFilter(new MyFilter("txt"));  
-	      
-	    int returnValue = fc.showOpenDialog(null);  
+	    fc.setMultiSelectionEnabled(false);
+	    fc.setFileSelectionMode(JFileChooser.FILES_ONLY);
+	    fc.setFileHidingEnabled(true);
+	    fc.setAcceptAllFileFilterUsed(false);
+	    fc.setFileFilter(new MyFilter("txt"));
+
+	    int returnValue = fc.showOpenDialog(null);
 	    ArrayList<String> allWords = new ArrayList<>();
-	    if (returnValue == JFileChooser.APPROVE_OPTION)  
+	    if (returnValue == JFileChooser.APPROVE_OPTION)
 	    {
 	        String path = fc.getSelectedFile().getPath();
 	        try
@@ -199,10 +235,12 @@ public class PairProgramming {
 	        	out.println(e.getMessage());
 			}
 	    }
-	    if(basic)
+	    if(basic) {
 	    	text = allWords;
-	    else
+	    }
+	    else {
 	    	return allWords.toArray(new String[0]);
+	    }
 	    return new String[0];
 	}
 
@@ -210,7 +248,9 @@ public class PairProgramming {
 	 * 功能: 读取文件, 用户接口文件
 	 * 参数: 目标文件所在文件目录
 	 */
-	public static void readText(String catelogue){ readText(catelogue, true); }
+	public static void readText(String catelogue){
+		readText(catelogue, true);
+	}
 
 	/**
 	 * 功能: 生成有向图
@@ -219,7 +259,7 @@ public class PairProgramming {
 		graph = new Graph(new ArrayList<String>(text));
 		words = new ArrayList<>(graph.getAllNodes().keySet());
 	}
-	
+
 	/**
 	 * 功能: 返回文本有向图的信息
 	 * 		 数组第一个元素为所有单词,用逗号分隔
@@ -241,7 +281,7 @@ public class PairProgramming {
 		}
 		return graphStr.toArray(new String[0]);
 	}
-	
+
 	/**
 	 * 功能: 查询桥接词
 	 * 参数: 给定的两个单词
@@ -253,8 +293,12 @@ public class PairProgramming {
 	    word2 = word2.toLowerCase();
 
 		//第一个或第二个单词不存在
-		if(words.indexOf(word1) == -1) return "3,null";
-		if(words.indexOf(word2) == -1) return "4,null";
+		if(words.indexOf(word1) == -1) {
+			return "3,null";
+		}
+		if(words.indexOf(word2) == -1) {
+			return "4,null";
+		}
 
 		//查询桥接词
 		HashMap<String, Graph.Node> gnodes = graph.getAllNodes();
@@ -264,14 +308,17 @@ public class PairProgramming {
 		for(String akey: next1.keySet())
 		{
 			next11 = gnodes.get(akey).getAdjVertices();
-			for(String bkey : next11.keySet())
-				if(bkey.equals(word2))
+			for(String bkey : next11.keySet()) {
+				if(bkey.equals(word2)) {
 					qwords.add(akey);
+				}
+			}
 		}
 
 		//没有桥接词
-		if(qwords.isEmpty())
+		if(qwords.isEmpty()) {
 			return "2,null";
+		}
 
 		//查询成功
 		ArrayList<String> result = new ArrayList<>();
@@ -279,7 +326,7 @@ public class PairProgramming {
 		result.addAll(qwords);
 		return String.join(",", result);
 	}
-	
+
 	/**
 	 * 功能: 给定文本插入桥接词, 生成新文本, 然后写入文件
 	 * 参数: 给定文本或者从文件读文本, inputText为空串则从文件读, 否则为前端读入文本
@@ -288,10 +335,12 @@ public class PairProgramming {
 	public static String generateNewText(String inputText) {
 		//处理输入文本或者读取文件
 		String[] allWords = null;
-		if(inputText.isEmpty())
+		if(inputText.isEmpty()) {
 			allWords = readText("C://Users/gzhang/Desktop/Lab1", false);
-		else
+		}
+		else {
 			allWords = inputText.replaceAll("[^(A-Za-z]"," ").split(" +"); //分拆单词
+		}
 
 		//插入桥接词
 		ArrayList<String> newWords = new ArrayList<>();
@@ -299,8 +348,9 @@ public class PairProgramming {
 		{
 			newWords.add(allWords[i]);
 			String[] queryResult = queryBridgeWords(allWords[i], allWords[i+1]).split(",");
-			if(queryResult[0].equals("1"))
+			if(queryResult[0].equals("1")) {
 				newWords.add(queryResult[1]);
+			}
 		}
 		newWords.add(allWords[allWords.length-1]);
 
@@ -316,7 +366,7 @@ public class PairProgramming {
 		}
 		return newText;
 	}
-	
+
 	/**
 	 * 功能: 二叉堆下沉操作
 	 * 参数: 堆, 所有结点在堆中的位置, 下沉结点的位置, 堆的大小
@@ -328,15 +378,17 @@ public class PairProgramming {
 		while (cur * 2 <= size)
 		{
 			Integer next = cur * 2;
-			if (!next.equals(size) && dist.get(heap[next + 1]) < dist.get(heap[next]))
+			if (!next.equals(size) && dist.get(heap[next + 1]) < dist.get(heap[next])) {
 				next++;
+			}
 			if (dist.get(heap[next]) < distValue)
 			{
 				heap[cur] = heap[next];
 				position.replace(heap[cur], cur);
 			}
-			else
+			else {
 				break;
+			}
 			cur = next;
 		}
 		heap[cur] = word;
@@ -359,8 +411,9 @@ public class PairProgramming {
 				heap[cur] = heap[next];
 				position.replace(heap[cur], cur);
 			}
-			else
+			else {
 				break;
+			}
 			cur = next;
 		}
 		heap[cur] = word;
@@ -376,16 +429,18 @@ public class PairProgramming {
 		HashMap<String, Integer> position = new HashMap<>();  //记录结点在堆中的位置
 
 		//初始化数据结构
-		for(String word: words)
+		for(String word: words) {
 			dist.put(word, infinity);
+		}
 		dist.replace(startSource, 0);
 		heap[1] = startSource;
 		position.put(startSource, 1);
 		for(Integer i=0, pos=2; !i.equals(size); ++i)
 		{
 			String word = words.get(i);
-			if(word.equals(startSource))
+			if(word.equals(startSource)) {
 				continue;
+			}
 			heap[pos++] = word;
 			position.put(word, pos-1);
 		}
@@ -401,8 +456,9 @@ public class PairProgramming {
 	    startWord = startWord.toLowerCase();
 
 		//起点单词不存在
-		if(words.indexOf(startWord) == -1)
+		if(words.indexOf(startWord) == -1) {
 			return "2";
+		}
 
 		//计算成功,并存储
 		Integer size = words.size();
@@ -434,7 +490,7 @@ public class PairProgramming {
 		}
 		return "1";
 	}
-	
+
 	/**
 	 * 功能: 查询指定的单源最短路径
 	 * 参数: 终点单词
@@ -445,11 +501,13 @@ public class PairProgramming {
 	    endWord = endWord.toLowerCase();
 
 		//终点单词不存在
-		if(words.indexOf(endWord) == -1)
+		if(words.indexOf(endWord) == -1) {
 			return "3@0@null";
+		}
 		//不存在路径
-		if(dist.get(endWord) == infinity)
+		if(dist.get(endWord) == infinity) {
 			return "2@0@null";
+		}
 
 		//查询成功
 		ArrayList<String> path = new ArrayList<>();
@@ -475,11 +533,13 @@ public class PairProgramming {
 	    word2 = word2.toLowerCase();
 
 		//起点单词不存在
-		if(words.indexOf(word1) == -1)
+		if(words.indexOf(word1) == -1) {
 			return "3@0@null";
+		}
 		//终点单词不存在
-		if(words.indexOf(word2) == -1)
+		if(words.indexOf(word2) == -1) {
 			return "4@0@null";
+		}
 
 		//初始化
 		startSource = word1;
@@ -491,9 +551,11 @@ public class PairProgramming {
 		for(String start: words)
 		{
 			HashMap<String, Pair<Graph.Node, Integer>> adjVertices= graph.getNode(start).getAdjVertices();
-			for(String end: adjVertices.keySet())
-				if(dist.get(end) - dist.get(start) == adjVertices.get(end).getSecond())
+			for(String end: adjVertices.keySet()) {
+				if(dist.get(end) - dist.get(start) == adjVertices.get(end).getSecond()) {
 					acceptedEdges.add(start + "," +end);
+				}
+			}
 		}
 
 		//计算两点之间的所有路径, 即所有最短路径
@@ -508,7 +570,9 @@ public class PairProgramming {
 			{
 				flag = false;
 				String curWord = path.get(path.size() - 1);
-				if (curWord.equals(word2)) break L;
+				if (curWord.equals(word2)) {
+					break L;
+				}
 				for (Pair<Graph.Node, Integer> node : graph.getNode(curWord).getAdjVertices().values()) {
 					String end = node.getFirst().getWord();
 					String edge = curWord + "," + end;
@@ -525,20 +589,23 @@ public class PairProgramming {
 			int length = path.size();
 			if(length > 1)
 			{
-				if (path.get(length-1).equals(word2))
+				if (path.get(length-1).equals(word2)) {
 					allShortestPath += String.join(",", path) + ";";
+				}
 
 				//弹出栈顶结点
 				visitedEdges.add(path.get(length-2) + "," + path.get(length-1));
 				path.remove(length-1);
 			}
-			else
+			else {
 				break;
+			}
 		}
 
 		//不存在路径
-		if(allShortestPath == null)
+		if(allShortestPath == null) {
 			return "2@0@null";
+		}
 		return "1@" + dist.get(word2) + "@" + allShortestPath.substring(4, allShortestPath.length()-1);
 	}
 
@@ -570,18 +637,22 @@ public class PairProgramming {
 			Random rand = new Random(System.currentTimeMillis());
 			String nextWord = adjWords[rand.nextInt(adjVertices.keySet().size())];
 			traverseWords.add(nextWord);
-			for(int i=1; i < traverseWords.size() - 1; ++i)	//检测边是否已经走过
-				if(traverseWords.get(i-1).equals(preWord) && traverseWords.get(i).equals(nextWord))
+			for(int i=1; i < traverseWords.size() - 1; ++i)	{ //检测边是否已经走过
+				if(traverseWords.get(i-1).equals(preWord) && traverseWords.get(i).equals(nextWord)) {
 					break LOOP;
+				}
+			}
 			preWord = nextWord;
 			adjVertices = adjVertices.get(nextWord).getFirst().getAdjVertices();
 		}
 		randomPath = traverseWords.toArray(new String[0]);
 		String randomPath = String.join(",", traverseWords);
-		if(adjVertices.isEmpty())
+		if(adjVertices.isEmpty()) {
             return "1@" + randomPath;
-		else
+		}
+		else {
 		    return "2@" + randomPath;
+		}
 	}
 
 	/**
@@ -626,9 +697,11 @@ public class PairProgramming {
 
 		//单源最短路径
 		out.println();
-		if(calcAllShortestPath("new").equals("1"))
-			for(String word: words)
+		if(calcAllShortestPath("new").equals("1")) {
+			for(String word: words) {
 			 	out.println(showOneShortestPath(word));
+			}
+		}
 
 		//两点最短路径
 		out.println();
@@ -640,7 +713,9 @@ public class PairProgramming {
 		do {
 			out.print("请输入起点单词:");
 			String word = in.nextLine();
-			if(word.equals("exit")) break;
+			if(word.equals("exit")) {
+				break;
+			}
 			out.println(randomWalk(word));
 			out.print("请输入步数:");
 			Integer num = Integer.parseInt(in.nextLine());
